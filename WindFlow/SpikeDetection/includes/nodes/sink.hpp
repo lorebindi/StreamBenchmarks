@@ -61,6 +61,7 @@ public:
     // operator() method
     void operator()(optional<tuple_t> &r, RuntimeContext &rc)
     {
+
         if (r) {
             if (processed == 0) {
                 parallelism = rc.getParallelism();

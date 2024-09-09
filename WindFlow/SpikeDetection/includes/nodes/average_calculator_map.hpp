@@ -25,9 +25,12 @@
 #define SPIKEDETECTION_AVERAGE_CALCULATOR_MAP_HPP
 
 #include<ff/ff.hpp>
+#include <ff/mapping_utils.hpp>
 #include "../util/tuple.hpp"
 #include "../util/constants.hpp"
 #include "../util/cli_util.hpp"
+
+
 
 using namespace std;
 using namespace ff;
@@ -96,6 +99,7 @@ public:
             parallelism = rc.getParallelism();
             replica_id = rc.getReplicaIndex();
         }
+
         t.incremental_average = mean_calculator.compute(t.key, t.property_value); // set the incremental average field and send the tuple toward the next node
         processed++;
         //print_tuple("[AverageCalculator] sent tuple: ", t);

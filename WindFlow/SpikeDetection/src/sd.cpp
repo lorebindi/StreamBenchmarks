@@ -35,6 +35,8 @@
 #include "../includes/util/constants.hpp"
 #include "../includes/nodes/average_calculator_map.hpp"
 
+#include<fstream>
+
 using namespace std;
 using namespace ff;
 using namespace wf;
@@ -213,6 +215,7 @@ int main(int argc, char* argv[])
         printf("Error in parsing the input arguments\n");
         exit(EXIT_FAILURE);
     }
+
     /// data pre-processing
     parse_dataset(file_path);
     create_tuples(num_keys);
@@ -235,7 +238,7 @@ int main(int argc, char* argv[])
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::EVENT_TIME);
     if (!chaining) { // no chaining
         /// create the operators
-        Source_Functor source_functor(dataset, rate, app_start_time, batch_size);
+        Source_Functor source_functor(dataset, rate, app_start_time, batch_size, source_par_deg);
         Source source = Source_Builder(source_functor)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
@@ -306,5 +309,7 @@ int main(int argc, char* argv[])
     cout << "Measured throughput: " << (int) throughput << " tuples/second" << endl;
     cout << "Dumping metrics" << endl;
     util::metric_group.dump_all();
+
+
     return 0;
 }

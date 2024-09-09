@@ -25,6 +25,7 @@
 #define SPIKEDETECTION_DETECTOR_HPP
 
 #include<ff/ff.hpp>
+#include<ff/mapping_utils.hpp>
 #include "../util/tuple.hpp"
 #include "../util/constants.hpp"
 

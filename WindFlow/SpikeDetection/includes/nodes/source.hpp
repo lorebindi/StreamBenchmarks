@@ -27,6 +27,7 @@
 #include<fstream>
 #include<vector>
 #include<ff/ff.hpp>
+#include<ff/mapping_utils.hpp>
 #include "../util/tuple.hpp"
 #include "../util/constants.hpp"
 
@@ -40,13 +41,14 @@ extern atomic<long> sent_tuples;
 class Source_Functor
 {
 private:
-    const vector<tuple_t> &dataset;
+    vector<vector<tuple_t>> datasets;
     int rate;
     size_t next_tuple_idx;
     long generated_tuples;
     unsigned long app_start_time;
     unsigned long current_time;
     size_t batch_size;
+    const size_t nreplicas;
 
     // active_delay method
     void active_delay(unsigned long waste_time)
@@ -64,18 +66,27 @@ public:
     Source_Functor(const vector<tuple_t> &_dataset,
                    const int _rate,
                    const unsigned long _app_start_time,
-                   const size_t _batch_size):
-                   dataset(_dataset),
+                   const size_t _batch_size,
+                   const int _nreplicas):
                    rate(_rate),
                    next_tuple_idx(0),
                    generated_tuples(0),
                    app_start_time(_app_start_time),
                    current_time(_app_start_time),
-                   batch_size(_batch_size) {}
+                   batch_size(_batch_size),
+                   nreplicas(_nreplicas)
+    {
+        datasets.resize(nreplicas);
+        for(size_t i=0; i<nreplicas; i++) {
+            datasets[i]= _dataset;
+        }
+
+    }
 
     // operator() method
     void operator()(Source_Shipper<tuple_t> &shipper)
     {
+
         current_time = current_time_nsecs(); // get the current time
         while (current_time - app_start_time <= app_run_time) // generation loop
         {
