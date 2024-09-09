@@ -1,0 +1,10 @@
+# Ignora directory e file generati da IDE
+.idea/
+
+# Ignora file e directory di build e metrica
+bin/
+log/
+metric_latency.json
+
+# Ignora file oggetto e di compilazione
+*.o
