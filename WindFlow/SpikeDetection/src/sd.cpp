@@ -219,6 +219,14 @@ int main(int argc, char* argv[])
     /// data pre-processing
     parse_dataset(file_path);
     create_tuples(num_keys);
+    // duplicate dataset per each source replica.
+    vector<vector<tuple_t>*> datasets;
+    if(source_par_deg > 0) {
+        datasets.resize(source_par_deg);
+        for(size_t i=0; i<datasets.size(); i++){
+            datasets[i] = new vector<tuple_t>(dataset);
+        }
+    }
     /// application starting time
     unsigned long app_start_time = current_time_nsecs();
     cout << "Executing SpikeDetection with parameters:" << endl;
@@ -236,9 +244,12 @@ int main(int argc, char* argv[])
     cout << "  * sink: " << sink_par_deg << endl;
     cout << "  * topology: source -> moving-average -> spike-detector -> sink" << endl;
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::EVENT_TIME);
+    //vector<tuple_t> test_dataset = {tuple_t(1.0, 2.0, 1), tuple_t(3.0, 4.0, 2)};
+    //size_t test_replicas = 1;
+
     if (!chaining) { // no chaining
         /// create the operators
-        Source_Functor source_functor(dataset, rate, app_start_time, batch_size, source_par_deg);
+        Source_Functor source_functor(datasets, rate, app_start_time, batch_size);
         Source source = Source_Builder(source_functor)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
@@ -270,7 +281,7 @@ int main(int argc, char* argv[])
     }
     else { // chaining
         /// create the operators
-        Source_Functor source_functor(dataset, rate, app_start_time, batch_size);
+        Source_Functor source_functor(datasets, rate, app_start_time, batch_size);
         Source source = Source_Builder(source_functor)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
