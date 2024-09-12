@@ -41,13 +41,7 @@ extern atomic<long> sent_tuples;
 class Source_Functor
 {
 private:
-    /**
-     * Each pointer in datasets point to a copy of original dataset.
-     * The goal is that each replica has it's dataset thus we don't take
-     * advantages from spatial and temporal locality when the replicas are pinning on
-     * the same NUMA Die.
-     */
-    const vector<vector<tuple_t>*> &datasets;
+    const vector<tuple_t> dataset;
     int rate;
     size_t next_tuple_idx;
     long generated_tuples;
@@ -68,11 +62,11 @@ private:
 
 public:
     // Constructor
-    Source_Functor(const vector<vector<tuple_t>*> & _datasets,
+    Source_Functor(const vector<tuple_t> _datasets,
                    const int _rate,
                    const unsigned long _app_start_time,
                    const size_t _batch_size):
-                   datasets(_datasets),
+                   dataset(_datasets),
                    rate(_rate),
                    next_tuple_idx(0),
                    generated_tuples(0),
@@ -84,12 +78,11 @@ public:
     void operator()(Source_Shipper<tuple_t> &shipper, RuntimeContext &context)
     {
         current_time = current_time_nsecs(); // get the current time
-        vector<tuple_t>* dataset = this->datasets[context.getReplicaIndex()]; //get the replica's dataset
         assert(dataset != nullptr);
 
         while (current_time - app_start_time <= app_run_time) // generation loop
         {
-            tuple_t t(dataset->at(next_tuple_idx));
+            tuple_t t(dataset.at(next_tuple_idx));
             if ((batch_size > 0) && (generated_tuples % batch_size == 0)) {
                 current_time = current_time_nsecs(); // get the new current time
             }
@@ -99,7 +92,7 @@ public:
             // t.ts = current_time;
             shipper.pushWithTimestamp(std::move(t), current_time); // send the next tuple
             generated_tuples++;
-            next_tuple_idx = (next_tuple_idx + 1) % dataset->size();
+            next_tuple_idx = (next_tuple_idx + 1) % dataset.size();
             if (rate != 0) { // active waiting to respect the generation rate
                 long delay_nsec = (long) ((1.0d / rate) * 1e9);
                 active_delay(delay_nsec);
