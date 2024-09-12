@@ -237,9 +237,11 @@ int main(int argc, char* argv[])
     cout << "  * topology: source -> moving-average -> spike-detector -> sink" << endl;
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::EVENT_TIME);
 
-    // spingBarrier required for pinning
-    size_t total_nThread = source_par_deg /*+ average_par_deg + detector_par_deg + sink_par_deg*/;
-    auto *barrier = new PinningSpinBarrier( total_nThread, source_par_deg, 0, 0, 0);
+
+    // spinBarrier required for pinning
+    size_t total_nThread = source_par_deg + average_par_deg + detector_par_deg + sink_par_deg;
+    auto *barrier = new PinningSpinBarrier( total_nThread, source_par_deg,
+        average_par_deg, detector_par_deg, sink_par_deg);
 
     if (!chaining) { // no chaining
         /// create the operators
@@ -249,25 +251,29 @@ int main(int argc, char* argv[])
                 .withName(source_name)
                 .withOutputBatchSize(batch_size)
                 .build();
-        
+
         Average_Calculator_Map_Functor avg_calc_functor(app_start_time);
-        Map average_calculator = Map_Builder(avg_calc_functor)
+        Map average_calculator = Map_Builder(avg_calc_functor, barrier)
                 .withParallelism(average_par_deg)
                 .withName(avg_calc_name)
                 .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
                 .withOutputBatchSize(batch_size)
                 .build();
+
         Detector_Functor detector_functor(app_start_time);
-        Filter detector = Filter_Builder(detector_functor)
+        Filter detector = Filter_Builder(detector_functor, barrier)
                 .withParallelism(detector_par_deg)
                 .withName(detector_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+
         Sink_Functor sink_functor(sampling, app_start_time);
-        Sink sink = Sink_Builder(sink_functor)
+        Sink sink = Sink_Builder(sink_functor, barrier)
                 .withParallelism(sink_par_deg)
                 .withName(sink_name)
                 .build();
+
+
         MultiPipe &mp = topology.add_source(source);
         cout << "Chaining is disabled" << endl;
         mp.add(average_calculator);
