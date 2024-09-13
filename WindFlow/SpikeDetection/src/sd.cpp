@@ -237,42 +237,75 @@ int main(int argc, char* argv[])
     cout << "  * topology: source -> moving-average -> spike-detector -> sink" << endl;
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::EVENT_TIME);
 
-
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
     // spinBarrier required for pinning
     size_t total_nThread = source_par_deg + average_par_deg + detector_par_deg + sink_par_deg;
     auto *barrier = new PinningSpinBarrier( total_nThread, source_par_deg,
         average_par_deg, detector_par_deg, sink_par_deg);
+#endif
 
     if (!chaining) { // no chaining
         /// create the operators
         Source_Functor source_functor(dataset, rate, app_start_time, batch_size);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
         Source source = Source_Builder(source_functor, barrier)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+#else
+        Source source = Source_Builder(source_functor)
+                .withParallelism(source_par_deg)
+                .withName(source_name)
+                .withOutputBatchSize(batch_size)
+                .build();
+#endif
 
         Average_Calculator_Map_Functor avg_calc_functor(app_start_time);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
         Map average_calculator = Map_Builder(avg_calc_functor, barrier)
                 .withParallelism(average_par_deg)
                 .withName(avg_calc_name)
                 .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
                 .withOutputBatchSize(batch_size)
                 .build();
+#else
+        Map average_calculator = Map_Builder(avg_calc_functor)
+                .withParallelism(average_par_deg)
+                .withName(avg_calc_name)
+                .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
+                .withOutputBatchSize(batch_size)
+                .build();
+#endif
 
         Detector_Functor detector_functor(app_start_time);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
         Filter detector = Filter_Builder(detector_functor, barrier)
                 .withParallelism(detector_par_deg)
                 .withName(detector_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+#else
+        Filter detector = Filter_Builder(detector_functor)
+                .withParallelism(detector_par_deg)
+                .withName(detector_name)
+                .withOutputBatchSize(batch_size)
+                .build();
+#endif
+
 
         Sink_Functor sink_functor(sampling, app_start_time);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
         Sink sink = Sink_Builder(sink_functor, barrier)
                 .withParallelism(sink_par_deg)
                 .withName(sink_name)
                 .build();
-
+#else
+        Sink sink = Sink_Builder(sink_functor)
+                .withParallelism(sink_par_deg)
+                .withName(sink_name)
+                .build();
+#endif
 
         MultiPipe &mp = topology.add_source(source);
         cout << "Chaining is disabled" << endl;
