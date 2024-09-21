@@ -41,7 +41,7 @@ extern atomic<long> total_bytes;
 class Source_Functor
 {
 private:
-    const vector<string> &dataset;
+    const vector<string> dataset;
     int rate;
     size_t next_tuple_idx;
     long generated_tuples;
@@ -64,7 +64,7 @@ private:
 
 public:
     // Constructor
-    Source_Functor(const vector<string> &_dataset,
+    Source_Functor(const vector<string> _dataset,
                    const int _rate,
                    const unsigned long _app_start_time,
                    const size_t _batch_size):

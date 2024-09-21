@@ -238,8 +238,6 @@ int main(int argc, char* argv[])
                             break;
                         }
                     }
-
-
                     break;
                 }
                 default: {
@@ -288,8 +286,8 @@ int main(int argc, char* argv[])
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
     // spinBarrier required for pinning
     size_t total_nThread = source_par_deg + average_par_deg + detector_par_deg + sink_par_deg;
-    PinningSpinBarrier barrier( total_nThread, source_par_deg,
-        average_par_deg, detector_par_deg, sink_par_deg);
+    PinningSpinBarrier barrier( total_nThread/*, source_par_deg,
+        average_par_deg, detector_par_deg, sink_par_deg*/);
     pinning_thread_context *source_pinning_context = new pinning_thread_context(barrier, true, source_cores_pinning);
     pinning_thread_context *map_pinning_context = new pinning_thread_context(barrier, true, map_cores_pinning);
     pinning_thread_context *filter_pinning_context = new pinning_thread_context(barrier, true, filter_cores_pinning);

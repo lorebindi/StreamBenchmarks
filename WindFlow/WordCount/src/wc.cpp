@@ -26,6 +26,7 @@
 #include<vector>
 #include<iostream>
 #include<ff/ff.hpp>
+#include "ff/barrier.hpp"
 #include<windflow.hpp>
 #include "../includes/nodes/sink.hpp"
 #include "../includes/util/result.hpp"
@@ -78,7 +79,11 @@ int main(int argc, char* argv[])
     long sampling = 0;
     bool chaining = false;
     size_t batch_size = 0;
-    if (argc == 9 || argc == 10) {
+    vector<int> source_cores_pinning;
+    vector<int> map_cores_pinning;
+    vector<int> filter_cores_pinning;
+    vector<int> sink_cores_pinning;
+    if (argc == 9 || argc == 10 || argc == 11) {
         while ((option = getopt_long(argc, argv, "r:s:p:b:c:", long_opts, &index)) != -1) {
             file_path = _input_file;
             switch (option) {
@@ -117,6 +122,48 @@ int main(int argc, char* argv[])
                 }
                 case 'c': {
                     chaining = true;
+                    break;
+                }
+                case 'a': {
+                    string arr(optarg);
+                    stringstream ss(arr);
+                    int count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= source_par_deg)
+                            source_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > source_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= splitter_par_deg)
+                            map_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > splitter_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= counter_par_deg)
+                            filter_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > counter_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= sink_par_deg)
+                            sink_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > sink_par_deg) {
+                            break;
+                        }
+                    }
                     break;
                 }
                 default: {
@@ -159,21 +206,60 @@ int main(int argc, char* argv[])
     cout << "  * sink: " << sink_par_deg << endl;
     cout << "  * topology: source -> splitter -> counter -> sink" << endl;
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::EVENT_TIME);
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    // spinBarrier required for pinning
+    size_t total_nThread = source_par_deg + splitter_par_deg + counter_par_deg + sink_par_deg;
+    PinningSpinBarrier barrier(total_nThread/*, source_par_deg,
+        splitter_par_deg, counter_par_deg, sink_par_deg*/);
+    pinning_thread_context *source_pinning_context = new pinning_thread_context(barrier, true, source_cores_pinning);
+    pinning_thread_context *flatmap_pinning_context = new pinning_thread_context(barrier, true, map_cores_pinning);
+    pinning_thread_context *reduce_pinning_context = new pinning_thread_context(barrier, true, filter_cores_pinning);
+    pinning_thread_context *sink_pinning_context = new pinning_thread_context(barrier, true, sink_cores_pinning);
+#endif
+
     if (!chaining) { // no chaining
         /// create the operators
         Source_Functor source_functor(dataset, rate, app_start_time, batch_size);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Source source = Source_Builder(source_functor, source_pinning_context)
+                .withParallelism(source_par_deg)
+                .withName(source_name)
+                .withOutputBatchSize(batch_size)
+                .build();
+#else
         Source source = Source_Builder(source_functor)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+#endif
+
         Splitter_Functor splitter_functor(app_start_time);
-        FlatMap splitter = FlatMap_Builder(splitter_functor)
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        FlatMap splitter = FlatMap_Builder(splitter_functor, flatmap_pinning_context)
                 .withParallelism(splitter_par_deg)
                 .withName(splitter_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+#else
+        FlatMap splitter = FlatMap_Builder(splitter_functor)
+                        .withParallelism(splitter_par_deg)
+                        .withName(splitter_name)
+                        .withOutputBatchSize(batch_size)
+                        .build();
+#endif
+
         Counter_Functor counter_functor(app_start_time);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Reduce counter = Reduce_Builder(counter_functor, reduce_pinning_context)
+                .withParallelism(counter_par_deg)
+                .withName(counter_name)
+                .withKeyBy([](const result_t &r) -> std::string { return r.word; })
+                .withInitialState(result_t())
+                .withOutputBatchSize(batch_size)
+                .build();
+#else
         Reduce counter = Reduce_Builder(counter_functor)
                 .withParallelism(counter_par_deg)
                 .withName(counter_name)
@@ -181,11 +267,20 @@ int main(int argc, char* argv[])
                 .withInitialState(result_t())
                 .withOutputBatchSize(batch_size)
                 .build();
+#endif
+
         Sink_Functor sink_functor(sampling, app_start_time);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Sink sink = Sink_Builder(sink_functor, sink_pinning_context)
+                .withParallelism(sink_par_deg)
+                .withName(sink_name)
+                .build();
+#else
         Sink sink = Sink_Builder(sink_functor)
                 .withParallelism(sink_par_deg)
                 .withName(sink_name)
                 .build();
+#endif
         MultiPipe &mp = topology.add_source(source);
         cout << "Chaining is disabled" << endl;
         mp.add(splitter);
