@@ -149,8 +149,12 @@ int main(int argc, char* argv[])
     bool chaining = false;
     size_t batch_size = 0;
     int num_keys = 0;
-    if (argc == 11 || argc == 12) {
-        while ((option = getopt_long(argc, argv, "r:k:s:p:b:c:", long_opts, &index)) != -1) {
+    vector<int> source_cores_pinning;
+    vector<int> map_cores_pinning;
+    vector<int> filter_cores_pinning;
+    vector<int> sink_cores_pinning;
+    if (argc == 11 || argc == 12 || argc == 13) {
+        while ((option = getopt_long(argc, argv, "r:k:s:p:b:c:a:", long_opts, &index)) != -1) {
             file_path = _input_file;
             switch (option) {
                 case 'r': {
@@ -192,6 +196,50 @@ int main(int argc, char* argv[])
                 }
                 case 'c': {
                     chaining = true;
+                    break;
+                }
+                case 'a': {
+                    string arr(optarg);
+                    stringstream ss(arr);
+                    int count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= source_par_deg)
+                            source_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > source_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= average_par_deg)
+                            map_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > average_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= detector_par_deg)
+                            filter_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > detector_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= sink_par_deg)
+                            sink_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > sink_par_deg) {
+                            break;
+                        }
+                    }
+
+
                     break;
                 }
                 default: {
@@ -240,15 +288,21 @@ int main(int argc, char* argv[])
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
     // spinBarrier required for pinning
     size_t total_nThread = source_par_deg + average_par_deg + detector_par_deg + sink_par_deg;
-    auto *barrier = new PinningSpinBarrier( total_nThread, source_par_deg,
+    PinningSpinBarrier barrier( total_nThread, source_par_deg,
         average_par_deg, detector_par_deg, sink_par_deg);
+    pinning_thread_context *source_pinning_context = new pinning_thread_context(barrier, true, source_cores_pinning);
+    pinning_thread_context *map_pinning_context = new pinning_thread_context(barrier, true, map_cores_pinning);
+    pinning_thread_context *filter_pinning_context = new pinning_thread_context(barrier, true, filter_cores_pinning);
+    pinning_thread_context *sink_pinning_context = new pinning_thread_context(barrier, true, sink_cores_pinning);
 #endif
+
+
 
     if (!chaining) { // no chaining
         /// create the operators
         Source_Functor source_functor(dataset, rate, app_start_time, batch_size);
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
-        Source source = Source_Builder(source_functor, barrier)
+        Source source = Source_Builder(source_functor, source_pinning_context)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
                 .withOutputBatchSize(batch_size)
@@ -263,7 +317,7 @@ int main(int argc, char* argv[])
 
         Average_Calculator_Map_Functor avg_calc_functor(app_start_time);
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
-        Map average_calculator = Map_Builder(avg_calc_functor, barrier)
+        Map average_calculator = Map_Builder(avg_calc_functor, map_pinning_context)
                 .withParallelism(average_par_deg)
                 .withName(avg_calc_name)
                 .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
@@ -280,7 +334,7 @@ int main(int argc, char* argv[])
 
         Detector_Functor detector_functor(app_start_time);
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
-        Filter detector = Filter_Builder(detector_functor, barrier)
+        Filter detector = Filter_Builder(detector_functor, filter_pinning_context)
                 .withParallelism(detector_par_deg)
                 .withName(detector_name)
                 .withOutputBatchSize(batch_size)
@@ -296,7 +350,7 @@ int main(int argc, char* argv[])
 
         Sink_Functor sink_functor(sampling, app_start_time);
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
-        Sink sink = Sink_Builder(sink_functor, barrier)
+        Sink sink = Sink_Builder(sink_functor, sink_pinning_context)
                 .withParallelism(sink_par_deg)
                 .withName(sink_name)
                 .build();
@@ -355,6 +409,12 @@ int main(int argc, char* argv[])
     cout << "Dumping metrics" << endl;
     util::metric_group.dump_all();
 
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    delete source_pinning_context;
+    delete map_pinning_context;
+    delete filter_pinning_context;
+    delete sink_pinning_context;
+#endif
 
     return 0;
 }
