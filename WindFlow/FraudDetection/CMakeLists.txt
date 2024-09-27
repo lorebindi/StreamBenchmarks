@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(WordCount)
+project(FraudDetection)
 
 # Imposta lo standard C++
 set(CMAKE_CXX_STANDARD 17)
@@ -10,4 +10,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(${CMAKE_SOURCE_DIR}/../../../WindFlow/wf)
 
 # Aggiungi l'eseguibile
-add_executable(WordCount src/wc.cpp)
+add_executable(FraudDetection src/fd.cpp)
