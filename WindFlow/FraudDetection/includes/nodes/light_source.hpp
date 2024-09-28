@@ -40,7 +40,7 @@ extern atomic<long> sent_tuples;
 class Source_Functor
 {
 private:
-    const vector<tuple_t> &dataset;
+    const vector<tuple_t> dataset;
     int rate;
     size_t next_tuple_idx;
     long generated_tuples;
@@ -61,7 +61,7 @@ private:
 
 public:
     // Constructor
-    Source_Functor(const vector<tuple_t> &_dataset,
+    Source_Functor(const vector<tuple_t> _dataset,
                    const int _rate,
                    const unsigned long _app_start_time,
                    const size_t _batch_size):

@@ -107,8 +107,11 @@ int main(int argc, char* argv[])
     bool chaining = false;
     size_t batch_size = 0;
     size_t num_keys = 0;
-    if (argc == 11 || argc == 12) {
-        while ((option = getopt_long(argc, argv, "r:k:s:p:b:c:", long_opts, &index)) != -1) {
+    vector<int> source_cores_pinning;
+    vector<int> filter_cores_pinning;
+    vector<int> sink_cores_pinning;
+    if (argc == 11 || argc == 12 || argc == 13) {
+        while ((option = getopt_long(argc, argv, "r:k:s:p:b:c:a:", long_opts, &index)) != -1) {
             file_path = _input_file;
             switch (option) {
                 case 'r': {
@@ -151,6 +154,38 @@ int main(int argc, char* argv[])
                     chaining = true;
                     break;
                 }
+                case 'a': {
+                    string arr(optarg);
+                    stringstream ss(arr);
+                    int count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= source_par_deg)
+                            source_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > source_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= predictor_par_deg)
+                            filter_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > predictor_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= sink_par_deg)
+                            sink_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > sink_par_deg)
+                            break;
+                    }
+                    break;
+                }
                 default: {
                     printf("Error in parsing the input arguments\n");
                     exit(EXIT_FAILURE);
@@ -190,15 +225,44 @@ int main(int argc, char* argv[])
     cout << "  * predictor: " << predictor_par_deg << endl;
     cout << "  * sink: " << sink_par_deg << endl;
     cout << "  * topology: source -> predictor -> sink" << endl;
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    // spinBarrier required for pinning
+    size_t total_nThread = source_par_deg + predictor_par_deg + sink_par_deg;
+    PinningSpinBarrier barrier(total_nThread/*, source_par_deg,
+        splitter_par_deg, counter_par_deg, sink_par_deg*/);
+    pinning_thread_context *source_pinning_context = new pinning_thread_context(barrier, true, source_cores_pinning);
+    pinning_thread_context *filter_pinning_context = new pinning_thread_context(barrier, true, filter_cores_pinning);
+    pinning_thread_context *sink_pinning_context = new pinning_thread_context(barrier, true, sink_cores_pinning);
+#endif
+
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::EVENT_TIME);
     if (!chaining) { // no chaining
         /// create the operators
         Source_Functor source_functor(dataset, rate, app_start_time, batch_size);
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Source source = Source_Builder(source_functor, source_pinning_context)
+                .withParallelism(source_par_deg)
+                .withName(light_source_name)
+                .withOutputBatchSize(batch_size)
+                .build();
+#else
         Source source = Source_Builder(source_functor)
-                            .withParallelism(source_par_deg)
-                            .withName(light_source_name)
-                            .withOutputBatchSize(batch_size)
-                            .build();
+                .withParallelism(source_par_deg)
+                .withName(light_source_name)
+                .withOutputBatchSize(batch_size)
+                .build();
+#endif
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Predictor_Functor predictor_functor(app_start_time);
+        Filter predictor = Filter_Builder(predictor_functor, filter_pinning_context)
+                                .withParallelism(predictor_par_deg)
+                                .withName(predictor_name)
+                                .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
+                                .withOutputBatchSize(batch_size)
+                                .build();
+#else
         Predictor_Functor predictor_functor(app_start_time);
         Filter predictor = Filter_Builder(predictor_functor)
                                 .withParallelism(predictor_par_deg)
@@ -206,11 +270,22 @@ int main(int argc, char* argv[])
                                 .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
                                 .withOutputBatchSize(batch_size)
                                 .build();
+#endif
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Sink_Functor sink_functor(sampling, app_start_time);
+        Sink sink = Sink_Builder(sink_functor, sink_pinning_context)
+                        .withParallelism(sink_par_deg)
+                        .withName(sink_name)
+                        .build();
+#else
         Sink_Functor sink_functor(sampling, app_start_time);
         Sink sink = Sink_Builder(sink_functor)
                         .withParallelism(sink_par_deg)
                         .withName(sink_name)
                         .build();
+#endif
+
         /// create the application
         MultiPipe &mp = topology.add_source(source);
         cout << "Chaining is disabled" << endl;

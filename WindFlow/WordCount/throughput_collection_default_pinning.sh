@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=40
+n_runs=20
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -13,7 +13,7 @@ throughput_values=""
 > $output_file1
 > $output_file2
 
-parallelism="1,1,1,1"
+parallelism="4,4,4,4"
 cpu_pinning=""
 batch="32"
 
@@ -62,7 +62,7 @@ do
 
       if [ $i -eq 10 ]; then
         throughput_values=""
-        parallelism="2,2,2,2"
+        parallelism="8,8,8,8"
         #cpu_pinning="0,64,16,80,32,96,48,112"
 
       elif [ $i -eq 20 ]; then
