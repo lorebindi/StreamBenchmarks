@@ -31,6 +31,7 @@
 #include "cadgeometry.h"
 #include "cadobjects.h"
 #include "opencad_api.h"
+#include <limits>
 #include "r2000.h"
 
 #include <cassert>

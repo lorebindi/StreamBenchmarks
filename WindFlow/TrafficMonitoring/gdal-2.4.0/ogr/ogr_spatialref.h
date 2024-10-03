@@ -32,7 +32,7 @@
 #ifndef OGR_SPATIALREF_H_INCLUDED
 #define OGR_SPATIALREF_H_INCLUDED
 
-#include "cpl_string.h"
+#include "../port/cpl_string.h"
 #include "ogr_srs_api.h"
 
 #include <cstddef>

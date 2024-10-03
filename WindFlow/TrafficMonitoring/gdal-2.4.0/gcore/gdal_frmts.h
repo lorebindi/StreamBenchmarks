@@ -31,7 +31,7 @@
 #ifndef GDAL_FRMTS_H_INCLUDED
 #define GDAL_FRMTS_H_INCLUDED
 
-#include "cpl_port.h"
+#include "../port/cpl_port.h"
 
 CPL_C_START
 void CPL_DLL GDALRegister_GTiff(void);

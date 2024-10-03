@@ -31,9 +31,9 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ogrsf_frmts.h"
-#include "ogr_geometry.h"
-#include "ogr_feature.h"
+#include "../gdal-2.4.0/ogr/ogrsf_frmts/ogrsf_frmts.h"
+#include "../gdal-2.4.0/ogr/ogr_geometry.h"
+#include "../gdal-2.4.0/ogr/ogr_feature.h"
 #include "polygon.hpp"
 
 using namespace std;

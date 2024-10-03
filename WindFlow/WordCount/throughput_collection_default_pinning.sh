@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=20
+n_runs=50
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -13,10 +13,8 @@ throughput_values=""
 > $output_file1
 > $output_file2
 
-parallelism="4,4,4,4"
-cpu_pinning=""
-batch="32"
-
+parallelism="2,2,2,2"
+batch=0
 # Controlla se ci sono utenti connessi
 utenti_connessi=$(w | wc -l)
 utenti_connessi=$((utenti_connessi - 2))
@@ -62,23 +60,23 @@ do
 
       if [ $i -eq 10 ]; then
         throughput_values=""
-        parallelism="8,8,8,8"
-        #cpu_pinning="0,64,16,80,32,96,48,112"
+        parallelism="2,2,2,2"
+        batch=32
 
       elif [ $i -eq 20 ]; then
         throughput_values=""
         parallelism="4,4,4,4"
-        #cpu_pinning="0,2,16,18,32,34,48,50"
+        batch=32
 
       elif [ $i -eq 30 ]; then
         throughput_values=""
         parallelism="8,8,8,8"
-        #cpu_pinning="2,10,18,26,34,42,50,58"
+        batch=0
 
-      #elif [ $i -eq 40 ]; then
-        #throughput_values=""
-        #parallelism="4,4,4,4"
-        #cpu_pinning="0,8,2,10,16,24,18,26,32,40,34,42,48,56,50,58"
+      elif [ $i -eq 40 ]; then
+        throughput_values=""
+        parallelism="8,8,8,8"
+        batch=32
 
       #elif [ $i -eq 50 ]; then
       #  throughput_values=""

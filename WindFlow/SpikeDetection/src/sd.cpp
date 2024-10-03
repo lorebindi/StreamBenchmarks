@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
         Map average_calculator = Map_Builder(avg_calc_functor, map_pinning_context)
                 .withParallelism(average_par_deg)
                 .withName(avg_calc_name)
-                /*.withKeyBy([](const tuple_t &t) -> size_t { return t.key; })*/
+                .withKeyBy([](const tuple_t &t) -> size_t { return t.key; })
                 .withOutputBatchSize(batch_size)
                 .build();
 #else

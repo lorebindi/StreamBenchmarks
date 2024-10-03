@@ -28,7 +28,7 @@
 #include <vector>
 #include <cfloat>
 
-#include "ogr_geometry.h"
+#include "../../gdal-2.4.0/ogr/ogr_geometry.h"
 
 using namespace std;
 

@@ -59,12 +59,12 @@ class GDALAsyncReader;
 
 #include "gdal.h"
 #include "gdal_frmts.h"
-#include "cpl_vsi.h"
-#include "cpl_conv.h"
-#include "cpl_string.h"
-#include "cpl_minixml.h"
-#include "cpl_multiproc.h"
-#include "cpl_atomic_ops.h"
+#include "../port/cpl_vsi.h"
+#include "../port/cpl_conv.h"
+#include "../port/cpl_string.h"
+#include "../port/cpl_minixml.h"
+#include "../port/cpl_multiproc.h"
+#include "../port/cpl_atomic_ops.h"
 
 #include <cmath>
 #include <iterator>
@@ -73,8 +73,8 @@ class GDALAsyncReader;
 #include <memory>
 #include <vector>
 
-#include "ogr_core.h"
-#include "ogr_feature.h"
+#include "../ogr/ogr_core.h"
+#include "../ogr/ogr_feature.h"
 
 //! @cond Doxygen_Suppress
 #define GMO_VALID                0x0001

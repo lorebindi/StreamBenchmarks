@@ -30,8 +30,8 @@
 #ifndef OGR_FEATURESTYLE_INCLUDE
 #define OGR_FEATURESTYLE_INCLUDE
 
-#include "cpl_conv.h"
-#include "cpl_string.h"
+#include "../port/cpl_conv.h"
+#include "../port/cpl_string.h"
 #include "ogr_core.h"
 
 class OGRFeature;

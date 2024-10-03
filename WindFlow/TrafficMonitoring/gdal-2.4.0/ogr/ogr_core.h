@@ -31,11 +31,11 @@
 #ifndef OGR_CORE_H_INCLUDED
 #define OGR_CORE_H_INCLUDED
 
-#include "cpl_port.h"
+#include "../port/cpl_port.h"
 #if defined(GDAL_COMPILATION)
 #define DO_NOT_DEFINE_GDAL_RELEASE_DATE_AND_GDAL_RELEASE_NAME
 #endif
-#include "gdal_version.h"
+#include "../gcore/gdal_version.h"
 
 /**
  * \file

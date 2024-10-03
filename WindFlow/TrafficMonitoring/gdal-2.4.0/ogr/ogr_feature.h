@@ -31,7 +31,7 @@
 #ifndef OGR_FEATURE_H_INCLUDED
 #define OGR_FEATURE_H_INCLUDED
 
-#include "cpl_atomic_ops.h"
+#include "../port/cpl_atomic_ops.h"
 #include "ogr_featurestyle.h"
 #include "ogr_geometry.h"
 

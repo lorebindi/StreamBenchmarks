@@ -32,8 +32,8 @@
 #ifndef OGR_GEOMETRY_H_INCLUDED
 #define OGR_GEOMETRY_H_INCLUDED
 
-#include "cpl_conv.h"
-#include "cpl_json.h"
+#include "../port/cpl_conv.h"
+#include "../port/cpl_json.h"
 #include "ogr_core.h"
 #include "ogr_spatialref.h"
 

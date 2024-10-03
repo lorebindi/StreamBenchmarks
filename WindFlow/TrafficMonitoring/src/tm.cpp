@@ -209,8 +209,14 @@ int main(int argc, char* argv[]) {
     long sampling = 0;
     bool chaining = false;
     size_t batch_size = 0;
-    if (argc == 9 || argc == 10) {
-        while ((option = getopt_long(argc, argv, "r:s:p:b:c:", long_opts, &index)) != -1) {
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    vector<int> source_cores_pinning;
+    vector<int> flatmap_cores_pinning;
+    vector<int> map_cores_pinning;
+    vector<int> sink_cores_pinning;
+#endif
+    if (argc == 9 || argc == 10 || argc == 11) {
+        while ((option = getopt_long(argc, argv, "r:s:p:b:c:a:", long_opts, &index)) != -1) {
             file_path = _beijing_input_file;
             switch (option) {
                 case 'r': {
@@ -250,6 +256,50 @@ int main(int argc, char* argv[]) {
                     chaining = true;
                     break;
                 }
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+                case 'a': {
+                    string arr(optarg);
+                    stringstream ss(arr);
+                    int count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= source_par_deg)
+                            source_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > source_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= matcher_par_deg)
+                            flatmap_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > matcher_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= calculator_par_deg)
+                            map_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > calculator_par_deg)
+                            break;
+                    }
+                    count = 1;
+                    for (int i; ss >> i;) {
+                        if(count <= sink_par_deg)
+                            sink_cores_pinning.push_back(i);
+                        if (ss.peek() == ',') ss.ignore();
+                        count++;
+                        if(count > sink_par_deg) {
+                            break;
+                        }
+                    }
+                    break;
+                }
+#endif
                 default: {
                     printf("Error in parsing the input arguments\n");
                     exit(EXIT_FAILURE);
@@ -292,32 +342,82 @@ int main(int argc, char* argv[]) {
     cout << "  * sink: " << sink_par_deg << endl;
     cout << "  * topology: source -> map-matcher -> speed-calculator -> sink" << endl;
     PipeGraph topology(topology_name, Execution_Mode_t::DEFAULT, Time_Policy_t::INGRESS_TIME);
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    // spinBarrier required for pinning
+    size_t total_nThread = source_par_deg + matcher_par_deg + calculator_par_deg + sink_par_deg;
+    PinningSpinBarrier barrier(total_nThread);
+    pinning_thread_context *source_pinning_context = new pinning_thread_context(barrier, true, source_cores_pinning);
+    pinning_thread_context *flatmap_pinning_context = new pinning_thread_context(barrier, true, flatmap_cores_pinning);
+    pinning_thread_context *map_pinning_context = new pinning_thread_context(barrier, true, map_cores_pinning);
+    pinning_thread_context *sink_pinning_context = new pinning_thread_context(barrier, true, sink_cores_pinning);
+#endif
+
+
     if (!chaining) { // no chaining
         /// create the nodes
         Source_Functor source_functor(dataset, rate, app_start_time);
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Source source = Source_Builder(source_functor, source_pinning_context)
+                .withParallelism(source_par_deg)
+                .withName(source_name)
+                .withOutputBatchSize(batch_size)
+                .build();
+#else
         Source source = Source_Builder(source_functor)
                 .withParallelism(source_par_deg)
                 .withName(source_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+#endif
+
         Map_Matcher_Functor map_match_functor(road_grid_list, app_start_time);
-        FlatMap map_matcher = FlatMap_Builder(map_match_functor)
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        FlatMap map_matcher = FlatMap_Builder(map_match_functor, flatmap_pinning_context)
                 .withParallelism(matcher_par_deg)
                 .withName(map_match_name)
                 .withOutputBatchSize(batch_size)
                 .build();
+#else
+        FlatMap map_matcher = FlatMap_Builder(map_match_functor)
+                        .withParallelism(matcher_par_deg)
+                        .withName(map_match_name)
+                        .withOutputBatchSize(batch_size)
+                        .build();
+#endif
+
         Speed_Calculator_Functor speed_calc_functor(app_start_time);
-        Map speed_calculator = Map_Builder(speed_calc_functor)
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Map speed_calculator = Map_Builder(speed_calc_functor, map_pinning_context)
                 .withParallelism(calculator_par_deg)
                 .withName(speed_calc_name)
                 .withKeyBy([](const result_t &r) -> size_t { return r.key; })
                 .withOutputBatchSize(batch_size)
                 .build();
+#else
+        Map speed_calculator = Map_Builder(speed_calc_functor)
+                        .withParallelism(calculator_par_deg)
+                        .withName(speed_calc_name)
+                        .withKeyBy([](const result_t &r) -> size_t { return r.key; })
+                        .withOutputBatchSize(batch_size)
+                        .build();
+#endif
+
         Sink_Functor sink_functor(sampling, app_start_time);
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+        Sink sink = Sink_Builder(sink_functor, sink_pinning_context)
+                .withParallelism(sink_par_deg)
+                .withName(sink_name)
+                .build();
+#else
         Sink sink = Sink_Builder(sink_functor)
                 .withParallelism(sink_par_deg)
                 .withName(sink_name)
-                .build();       
+                .build();
+#endif
         MultiPipe &mp = topology.add_source(source);
         cout << "Chaining is disabled" << endl;
         mp.add(map_matcher);
@@ -365,5 +465,13 @@ int main(int argc, char* argv[]) {
     cout << "Measured throughput: " << (int) throughput << " tuples/second" << endl;
     cout << "Dumping metrics" << endl;
     util::metric_group.dump_all();
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    delete source_pinning_context;
+    delete flatmap_pinning_context;
+    delete map_pinning_context;
+    delete sink_pinning_context;
+#endif
+
     return 0;
 }

@@ -79,10 +79,12 @@ int main(int argc, char* argv[])
     long sampling = 0;
     bool chaining = false;
     size_t batch_size = 0;
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
     vector<int> source_cores_pinning;
-    vector<int> map_cores_pinning;
-    vector<int> filter_cores_pinning;
+    vector<int> flatmap_cores_pinning;
+    vector<int> reduce_cores_pinning;
     vector<int> sink_cores_pinning;
+#endif
     if (argc == 9 || argc == 10 || argc == 11) {
         while ((option = getopt_long(argc, argv, "r:s:p:b:c:", long_opts, &index)) != -1) {
             file_path = _input_file;
@@ -139,7 +141,7 @@ int main(int argc, char* argv[])
                     count = 1;
                     for (int i; ss >> i;) {
                         if(count <= splitter_par_deg)
-                            map_cores_pinning.push_back(i);
+                            flatmap_cores_pinning.push_back(i);
                         if (ss.peek() == ',') ss.ignore();
                         count++;
                         if(count > splitter_par_deg)
@@ -148,7 +150,7 @@ int main(int argc, char* argv[])
                     count = 1;
                     for (int i; ss >> i;) {
                         if(count <= counter_par_deg)
-                            filter_cores_pinning.push_back(i);
+                            reduce_cores_pinning.push_back(i);
                         if (ss.peek() == ',') ss.ignore();
                         count++;
                         if(count > counter_par_deg)
@@ -213,8 +215,8 @@ int main(int argc, char* argv[])
     PinningSpinBarrier barrier(total_nThread/*, source_par_deg,
         splitter_par_deg, counter_par_deg, sink_par_deg*/);
     pinning_thread_context *source_pinning_context = new pinning_thread_context(barrier, true, source_cores_pinning);
-    pinning_thread_context *flatmap_pinning_context = new pinning_thread_context(barrier, true, map_cores_pinning);
-    pinning_thread_context *reduce_pinning_context = new pinning_thread_context(barrier, true, filter_cores_pinning);
+    pinning_thread_context *flatmap_pinning_context = new pinning_thread_context(barrier, true, flatmap_cores_pinning);
+    pinning_thread_context *reduce_pinning_context = new pinning_thread_context(barrier, true, reduce_cores_pinning);
     pinning_thread_context *sink_pinning_context = new pinning_thread_context(barrier, true, sink_cores_pinning);
 #endif
 
@@ -330,5 +332,13 @@ int main(int argc, char* argv[])
     cout << "Measured throughput: " << (int) throughput << " lines/second, " << mbs << " MB/s" << endl;
     cout << "Dumping metrics" << endl;
     util::metric_group.dump_all();
+
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
+    delete source_pinning_context;
+    delete flatmap_pinning_context;
+    delete reduce_pinning_context;
+    delete sink_pinning_context;
+#endif
+
     return 0;
 }

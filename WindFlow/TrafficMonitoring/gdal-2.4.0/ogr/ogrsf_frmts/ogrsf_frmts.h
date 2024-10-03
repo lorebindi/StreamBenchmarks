@@ -31,10 +31,10 @@
 #ifndef OGRSF_FRMTS_H_INCLUDED
 #define OGRSF_FRMTS_H_INCLUDED
 
-#include "cpl_progress.h"
-#include "ogr_feature.h"
-#include "ogr_featurestyle.h"
-#include "gdal_priv.h"
+#include "../../port/cpl_progress.h"
+#include "../ogr_feature.h"
+#include "../ogr_featurestyle.h"
+#include "../../gcore/gdal_priv.h"
 
 #include <memory>
 

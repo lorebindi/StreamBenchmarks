@@ -42,12 +42,12 @@
 #define DO_NOT_DEFINE_GDAL_RELEASE_DATE_AND_GDAL_RELEASE_NAME
 #endif
 #include "gdal_version.h"
-#include "cpl_port.h"
-#include "cpl_error.h"
-#include "cpl_progress.h"
-#include "cpl_virtualmem.h"
-#include "cpl_minixml.h"
-#include "ogr_api.h"
+#include "../port/cpl_port.h"
+#include "../port/cpl_error.h"
+#include "../port/cpl_progress.h"
+#include "../port/cpl_virtualmem.h"
+#include "../port/cpl_minixml.h"
+#include "../ogr/ogr_api.h"
 #endif
 
 /* -------------------------------------------------------------------- */

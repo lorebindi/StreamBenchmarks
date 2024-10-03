@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=10
+n_runs=20
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -14,7 +14,7 @@ throughput_values=""
 > $output_file2
 
 parallelism="4,4,4,4"
-cpu_pinning="0,8,2,10,16,24,18,26,32,40,34,42,48,56,50,58"
+cpu_pinning="2,34,10,42,18,50,26,58,0,32,8,40,16,48,24,56"
 batch="32"
 
 for ((i=1; i<=n_runs; i++))
@@ -43,13 +43,13 @@ do
        throughput2=$(echo $output | grep -o '[0-9.]\+' | tail -n 1)
 
        throughput_values+="$throughput2; "
-       echo "Esecuzione $i (--parallelism: $parallelism --cpu-pinning: $cpu_pinning), Throughput: $throughput1" >> $output_file1
+       echo "Esecuzione $i (-- batch $batch --parallelism: $parallelism --cpu-pinning: $cpu_pinning), Throughput: $throughput1" >> $output_file1
        echo "" >> $output_file1
     fi
 
     if [ $((i % 10)) -eq 0 ]; then
       throughput_values=${throughput_values::-2}
-      echo "--parallelism: $parallelism; --cpu-pinning: $cpu_pinning;">> $output_file2
+      echo "--batch $batch --parallelism: $parallelism; --cpu-pinning: $cpu_pinning;">> $output_file2
       echo " Throughput: $throughput_values">> $output_file2
       echo "" >> $output_file1
       echo "" >> $output_file1
@@ -64,9 +64,9 @@ do
 
       elif [ $i -eq 20 ]; then
         throughput_values=""
-        parallelism="4,4,4,4"
+        parallelism="2,2,2,2"
         batch=0
-        cpu_pinning="2,50,42,16,18,10,58,32,34,26,0,48,8,24,40,56"
+        cpu_pinning="2,18,10,26,34,50,42,58"
 
       elif [ $i -eq 30 ]; then
         throughput_values=""

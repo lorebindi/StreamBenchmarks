@@ -107,9 +107,11 @@ int main(int argc, char* argv[])
     bool chaining = false;
     size_t batch_size = 0;
     size_t num_keys = 0;
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
     vector<int> source_cores_pinning;
     vector<int> filter_cores_pinning;
     vector<int> sink_cores_pinning;
+#endif
     if (argc == 11 || argc == 12 || argc == 13) {
         while ((option = getopt_long(argc, argv, "r:k:s:p:b:c:a:", long_opts, &index)) != -1) {
             file_path = _input_file;

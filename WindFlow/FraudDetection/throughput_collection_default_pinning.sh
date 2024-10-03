@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=80
+n_runs=10
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -13,15 +13,15 @@ throughput_values=""
 > $output_file1
 > $output_file2
 
-parallelism="1,1,1"
-batch=0
+parallelism="8,8,8"
+batch=32
 
 for ((i=1; i<=n_runs; i++))
 do
     echo "Execution $i:"
 
     # Esegue il programma e cattura l'output desiderato
-    output=$(././bin/sd --rate 0 --keys 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput")
+    output=$(././bin/fd --rate 0 --keys 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput")
 
     echo "$output"
 
@@ -46,21 +46,23 @@ do
 
       if [ $i -eq 10 ]; then
         throughput_values=""
-        parallelism="1,1,1"
-        batch=32
+        parallelism="4,4,4"
+        batch=0
 
       elif [ $i -eq 20 ]; then
         throughput_values=""
-        parallelism="2,2,2"
+        parallelism="4,4,4"
+        batch=32
 
       elif [ $i -eq 30 ]; then
         throughput_values=""
-        parallelism="2,2,2"
-        batch=32
+        parallelism="8,8,8"
+        batch=0
 
       elif [ $i -eq 40 ]; then
         throughput_values=""
-        parallelism="4,4,4"
+        parallelism="8,8,8"
+        batch=0
 
       elif [ $i -eq 50 ]; then
         throughput_values=""

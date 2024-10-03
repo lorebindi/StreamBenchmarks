@@ -26,7 +26,7 @@
 
 #include <ff/ff.hpp>
 
-#include "ogr_geometry.h"
+#include "../../gdal-2.4.0/ogr/ogr_geometry.h"
 #include "../util/tuple.hpp"
 #include "../util/result.hpp"
 #include "../util/constants.hpp"

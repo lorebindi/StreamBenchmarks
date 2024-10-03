@@ -46,7 +46,7 @@ const struct option long_opts[] = {
 #if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
         /**
          * used for manual pinning. The order to respect it's:
-         * [cores' source replicas, cores' map replicas, cores' filter replicas, cores' sink replicas].
+         * [cores' source replicas, cores' flatmap replicas, cores' reduce replicas, cores' sink replicas].
          * Example: "--parallelism 2,2,2,2 --cpu-pinning 0,16,32,48,8,24,40,56"; first source replica it's pinned
          * on core 0 and the second on core 16, the first map replica it's pinned on core 32 and the second
          * on core 45, ...

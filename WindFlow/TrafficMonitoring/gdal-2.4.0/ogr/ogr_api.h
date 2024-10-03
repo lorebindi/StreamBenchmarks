@@ -40,8 +40,8 @@
  * See also: ogr_geometry.h, ogr_feature.h, ogrsf_frmts.h, ogr_featurestyle.h
  */
 
-#include "cpl_progress.h"
-#include "cpl_minixml.h"
+#include "../port/cpl_progress.h"
+#include "../port/cpl_minixml.h"
 #include "ogr_core.h"
 
 CPL_C_START
