@@ -11,7 +11,7 @@ OUT_DIR			= ~/StreamBenchmarks/WindFlow/TrafficMonitoring/bin
 CXX 			= g++
 CXXFLAGS		= -std=c++17
 INCLUDES		= -I $(FF_ROOT) -I $(WF_INCLUDES) -I $(INCLUDE_DIR) -I $(GDAL_INCLUDE)
-MACRO           = -DFF_BOUNDED_BUFFER -DNDEBUG
+MACRO           = -DFF_BOUNDED_BUFFER -DNDEBUG -DNO_DEFAULT_MAPPING -DMANUAL_PINNING
 OPTFLAGS		= -g -O3 -finline-functions
 LDFLAGS         = -pthread -L$(GDAL_LIBDIR) -lgdal
 

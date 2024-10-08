@@ -156,6 +156,7 @@ int main(int argc, char* argv[])
                     chaining = true;
                     break;
                 }
+#if defined(NO_DEFAULT_MAPPING) && defined(MANUAL_PINNING)
                 case 'a': {
                     string arr(optarg);
                     stringstream ss(arr);
@@ -188,6 +189,7 @@ int main(int argc, char* argv[])
                     }
                     break;
                 }
+#endif
                 default: {
                     printf("Error in parsing the input arguments\n");
                     exit(EXIT_FAILURE);

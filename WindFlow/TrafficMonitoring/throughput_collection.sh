@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=110
+n_runs=10
 current_run=1
 
 # File di log per raccogliere gli output
@@ -23,54 +23,34 @@ get_previous_power_of_10() {
 
 # Funzione per impostare i parametri in base al valore di `i`
 set_parameters() {
-    local i=$1
     if [ $i -le 10 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,18,34,50,10,26,42,58,0,16,32,48"
+        parallelism="8,8,8,8"
+        batch=0
+        cpu_pinning="0,16,32,48,8,24,40,56,2,18,34,50,10,26,42,58,4,20,36,52,12,28,44,60,6,22,38,54,14,30,46,62"
     elif [ $i -le 20 ]; then
-        parallelism="4,4,4"
+        parallelism="8,8,8,8"
         batch=32
-        cpu_pinning="3,19,35,51,11,27,43,59,1,17,33,49"
+        cpu_pinning="0,8,2,10,4,12,6,14,16,24,18,26,20,28,22,30,32,40,34,42,36,44,38,46,48,56,50,58,52,60,54,62"
     elif [ $i -le 30 ]; then
-        parallelism="4,4,4"
+        parallelism="8,8,8,8"
         batch=32
-        cpu_pinning="2,18,34,50,0,16,32,48,8,24,40,56"
+        cpu_pinning="0,8,2,10,1,9,3,11,16,24,18,26,17,25,19,27,32,40,34,42,33,41,35,43,48,56,50,58,49,57,51,59"
     elif [ $i -le 40 ]; then
-        parallelism="4,4,4"
+        parallelism="8,8,8,8"
         batch=32
-        cpu_pinning="0,16,32,48,2,18,34,50,10,26,42,58"
+        cpu_pinning="1,9,3,11,5,13,7,15,17,25,19,27,21,29,23,31,33,41,35,43,37,45,39,47,49,57,51,59,53,61,55,63"
     elif [ $i -le 50 ]; then
-        parallelism="4,4,4"
+        parallelism="8,8,8,8"
         batch=32
-        cpu_pinning="1,17,33,49,3,19,35,51,11,27,43,59"
+        cpu_pinning="0,32,8,40,4,36,12,44,2,34,10,42,6,38,14,46,18,50,26,58,22,54,30,62,16,48,24,56,20,52,28,60"
     elif [ $i -le 60 ]; then
-        parallelism="4,4,4"
+        parallelism="8,8,8,8"
         batch=32
-        cpu_pinning="2,34,10,42,18,50,26,58,0,16,32,48"
-    elif [ $i -le 70 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="3,35,11,43,19,51,27,59,1,17,33,49"
-    elif [ $i -le 80 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,34,10,42,18,50,26,58,3,19,35,51"
-    elif [ $i -le 90 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,34,10,42,0,16,32,48,18,50,26,58"
-    elif [ $i -le 100 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,10,0,8,18,26,16,24,34,42,32,56"
-    elif [ $i -le 110 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,50,42,16,18,10,58,32,34,26,0,48"
+        cpu_pinning="0,48,40,18,10,58,36,28,16,8,56,34,26,4,52,44,32,24,2,50,42,20,12,60,6,22,38,54,14,30,46,62"
 
     fi
 }
+
 
 # Funzione per eseguire i test
 run_tests() {
@@ -99,17 +79,21 @@ run_tests() {
         fi
 
         # Esegue il programma e cattura l'output desiderato
-        output=$(././bin/fd --rate 0 --keys 0 --sampling 1000 --batch $batch --parallelism $parallelism --cpu-pinning $cpu_pinning | grep "Measured throughput")
+        output=$(././bin/tm --rate 0 --sampling 1000 --batch $batch --parallelism $parallelism --cpu-pinning $cpu_pinning | grep "Measured throughput")
 
         echo "$output"
 
         if [ -z "$output" ]; then
             echo "Error: 'Measured throughput:' not found $i" >> $output_file1
         else
-           throughput1=$(echo $output | grep -o '[0-9.]\+ tuples/seconds')
+           throughput1=$(echo $output | grep -o '[0-9.]\+ tuples/second')
            throughput2=$(echo $output | grep -o '[0-9.]\+' | tail -n 1)
 
-           throughput_values+="$throughput2;"
+           # Aggiunge il throughput se non vuoto
+           if [ ! -z "$throughput2" ]; then
+              throughput_values+="$throughput2;"
+           fi
+
            echo "Execution $i (--batch $batch --parallelism: $parallelism --cpu-pinning $cpu_pinning), Throughput: $throughput1" >> $output_file1
            echo "" >> $output_file1
         fi
@@ -156,7 +140,8 @@ do
         echo "Tests successfully completed"
         break
     else
-        echo "Tests has been intrrupted."
+        echo "Tests has been interrupted."
     fi
 done
 
+exit

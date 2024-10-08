@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=110
+n_runs=10
 current_run=1
 
 # File di log per raccogliere gli output
@@ -23,54 +23,34 @@ get_previous_power_of_10() {
 
 # Funzione per impostare i parametri in base al valore di `i`
 set_parameters() {
-    local i=$1
     if [ $i -le 10 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,18,34,50,10,26,42,58,0,16,32,48"
+        parallelism="8,8,8,8"
+        batch=0
     elif [ $i -le 20 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="3,19,35,51,11,27,43,59,1,17,33,49"
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 30 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,18,34,50,0,16,32,48,8,24,40,56"
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 40 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="0,16,32,48,2,18,34,50,10,26,42,58"
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 50 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="1,17,33,49,3,19,35,51,11,27,43,59"
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 60 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,34,10,42,18,50,26,58,0,16,32,48"
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 70 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="3,35,11,43,19,51,27,59,1,17,33,49"
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 80 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,34,10,42,18,50,26,58,3,19,35,51"
-    elif [ $i -le 90 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,34,10,42,0,16,32,48,18,50,26,58"
-    elif [ $i -le 100 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,10,0,8,18,26,16,24,34,42,32,56"
-    elif [ $i -le 110 ]; then
-        parallelism="4,4,4"
-        batch=32
-        cpu_pinning="2,50,42,16,18,10,58,32,34,26,0,48"
+        parallelism="2,2,2,2"
+        batch=0
 
     fi
 }
+
 
 # Funzione per eseguire i test
 run_tests() {
@@ -99,7 +79,7 @@ run_tests() {
         fi
 
         # Esegue il programma e cattura l'output desiderato
-        output=$(././bin/fd --rate 0 --keys 0 --sampling 1000 --batch $batch --parallelism $parallelism --cpu-pinning $cpu_pinning | grep "Measured throughput")
+        output=$(././bin/tm --rate 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput")
 
         echo "$output"
 
@@ -109,7 +89,11 @@ run_tests() {
            throughput1=$(echo $output | grep -o '[0-9.]\+ tuples/seconds')
            throughput2=$(echo $output | grep -o '[0-9.]\+' | tail -n 1)
 
-           throughput_values+="$throughput2;"
+           # Aggiunge il throughput se non vuoto
+           if [ ! -z "$throughput2" ]; then
+              throughput_values+="$throughput2;"
+           fi
+
            echo "Execution $i (--batch $batch --parallelism: $parallelism --cpu-pinning $cpu_pinning), Throughput: $throughput1" >> $output_file1
            echo "" >> $output_file1
         fi
@@ -156,7 +140,8 @@ do
         echo "Tests successfully completed"
         break
     else
-        echo "Tests has been intrrupted."
+        echo "Tests has been interrupted."
     fi
 done
 
+exit

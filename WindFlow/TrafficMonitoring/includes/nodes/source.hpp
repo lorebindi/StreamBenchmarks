@@ -75,7 +75,7 @@ public:
      *  @param _rate stream generation rate
      *  @param _app_start_time application starting time
      */
-    Source_Functor(const vector<tuple_t>& _dataset,
+    Source_Functor(const vector<tuple_t> _dataset,
                    const int _rate,
                    const unsigned long _app_start_time):
             rate(_rate),
