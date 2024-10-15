@@ -78,7 +78,7 @@ public:
     void operator()(Source_Shipper<tuple_t> &shipper, RuntimeContext &context)
     {
         current_time = current_time_nsecs(); // get the current time
-        assert(dataset != nullptr);
+        //assert(dataset != nullptr);
 
         while (current_time - app_start_time <= app_run_time) // generation loop
         {

@@ -24,11 +24,11 @@ get_previous_power_of_10() {
 # Funzione per impostare i parametri in base al valore di `i`
 set_parameters() {
     if [ $i -le 10 ]; then
-        parallelism="8,8,8,8"
-        batch=0
+        parallelism="16,16,16,16"
+        batch=32
     elif [ $i -le 20 ]; then
-        parallelism="2,2,2,2"
-        batch=0
+        parallelism="16,16,16,16"
+        batch=32
     elif [ $i -le 30 ]; then
         parallelism="2,2,2,2"
         batch=0

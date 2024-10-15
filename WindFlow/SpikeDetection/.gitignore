@@ -4,6 +4,7 @@
 # Ignora file e directory di build e metrica
 bin/
 log/
+profiling_files/
 metric_latency.json
 
 # Ignora file oggetto e di compilazione
