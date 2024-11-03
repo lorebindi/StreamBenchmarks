@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=70
-current_run=61
+n_runs=300
+current_run=1
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -27,26 +27,92 @@ set_parameters() {
         parallelism="1,1,1,1"
         batch=0
     elif [ $i -le 20 ]; then
-       parallelism="1,1,1,1"
-       batch=32
+        parallelism="1,1,1,1"
+        batch=2
     elif [ $i -le 30 ]; then
-       parallelism="2,2,2,2"
-       batch=0
+        parallelism="1,1,1,1"
+        batch=4
     elif [ $i -le 40 ]; then
-       parallelism="2,2,2,2"
-       batch=32
+        parallelism="1,1,1,1"
+        batch=8
     elif [ $i -le 50 ]; then
-       parallelism="4,4,4,4"
-       batch=0
+        parallelism="1,1,1,1"
+        batch=16
     elif [ $i -le 60 ]; then
-       parallelism="4,4,4,4"
-       batch=32
+        parallelism="1,1,1,1"
+        batch=32
     elif [ $i -le 70 ]; then
-       parallelism="8,8,8,8"
-       batch=0
+        parallelism="2,2,2,2"
+        batch=0
     elif [ $i -le 80 ]; then
-       parallelism="8,8,8,8"
-       batch=32
+        parallelism="2,2,2,2"
+        batch=2
+    elif [ $i -le 90 ]; then
+        parallelism="2,2,2,2"
+        batch=4
+    elif [ $i -le 100 ]; then
+        parallelism="2,2,2,2"
+        batch=8
+    elif [ $i -le 110 ]; then
+        parallelism="2,2,2,2"
+        batch=16
+    elif [ $i -le 120 ]; then
+        parallelism="2,2,2,2"
+        batch=32
+    elif [ $i -le 130 ]; then
+        parallelism="4,4,4,4"
+        batch=2
+    elif [ $i -le 140 ]; then
+        parallelism="4,4,4,4"
+        batch=0
+    elif [ $i -le 150 ]; then
+        parallelism="4,4,4,4"
+        batch=4
+    elif [ $i -le 160 ]; then
+        parallelism="4,4,4,4"
+        batch=8
+    elif [ $i -le 170 ]; then
+        parallelism="4,4,4,4"
+        batch=16
+    elif [ $i -le 180 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+    elif [ $i -le 190 ]; then
+        parallelism="8,8,8,8"
+        batch=0
+    elif [ $i -le 200 ]; then
+        parallelism="8,8,8,8"
+        batch=2
+    elif [ $i -le 210 ]; then
+        parallelism="8,8,8,8"
+        batch=4
+    elif [ $i -le 220 ]; then
+        parallelism="8,8,8,8"
+        batch=8
+    elif [ $i -le 230 ]; then
+        parallelism="8,8,8,8"
+        batch=16
+    elif [ $i -le 240 ]; then
+        parallelism="8,8,8,8"
+        batch=32
+    elif [ $i -le 250 ]; then
+        parallelism="16,16,16,16"
+        batch=0
+    elif [ $i -le 260 ]; then
+        parallelism="16,16,16,16"
+        batch=2
+    elif [ $i -le 270 ]; then
+        parallelism="16,16,16,16"
+        batch=4
+    elif [ $i -le 280 ]; then
+        parallelism="16,16,16,16"
+        batch=8
+    elif [ $i -le 290 ]; then
+        parallelism="16,16,16,16"
+        batch=16
+    elif [ $i -le 300 ]; then
+        parallelism="16,16,16,16"
+        batch=32
 
     fi
 }
@@ -79,17 +145,15 @@ run_tests() {
         fi
 
         # Esegue il programma e cattura l'output desiderato
-        output=$(./bin/wc --rate 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput:")
+        output=$(././bin/sd --rate 0 --keys 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput")
 
         echo "$output"
 
         if [ -z "$output" ]; then
             echo "Error: 'Measured throughput:' not found $i" >> $output_file1
         else
-           throughput1=$(echo $output | grep -o '[0-9.]\+ MB/s')
+           throughput1=$(echo $output | grep -o '[0-9.]\+ tuples/seconds')
            throughput2=$(echo $output | grep -o '[0-9.]\+' | tail -n 1)
-
-           throughput2=$(echo $throughput2 | sed 's/\./,/g')
 
            # Aggiunge il throughput se non vuoto
            if [ ! -z "$throughput2" ]; then

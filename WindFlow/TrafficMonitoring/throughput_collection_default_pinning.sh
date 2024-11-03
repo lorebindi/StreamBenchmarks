@@ -25,9 +25,9 @@ get_previous_power_of_10() {
 set_parameters() {
     if [ $i -le 10 ]; then
         parallelism="16,16,16,16"
-        batch=32
+        batch=0
     elif [ $i -le 20 ]; then
-        parallelism="16,16,16,16"
+        parallelism="8,8,8,8"
         batch=32
     elif [ $i -le 30 ]; then
         parallelism="2,2,2,2"

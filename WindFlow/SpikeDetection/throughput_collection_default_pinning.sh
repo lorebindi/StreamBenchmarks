@@ -2,7 +2,7 @@
 
 # Numero di esecuzioni
 n_runs=80
-current_run=1
+current_run=71
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -46,6 +46,72 @@ set_parameters() {
         batch=0
     elif [ $i -le 80 ]; then
         parallelism="8,8,8,8"
+        batch=32
+    elif [ $i -le 90 ]; then
+        parallelism="2,2,2,2"
+        batch=4
+    elif [ $i -le 100 ]; then
+        parallelism="2,2,2,2"
+        batch=8
+    elif [ $i -le 110 ]; then
+        parallelism="2,2,2,2"
+        batch=16
+    elif [ $i -le 120 ]; then
+        parallelism="2,2,2,2"
+        batch=32
+    elif [ $i -le 120 ]; then
+        parallelism="4,4,4,4"
+        batch=0
+    elif [ $i -le 130 ]; then
+        parallelism="4,4,4,4"
+        batch=2
+    elif [ $i -le 140 ]; then
+        parallelism="4,4,4,4"
+        batch=4
+    elif [ $i -le 150 ]; then
+        parallelism="4,4,4,4"
+        batch=8
+    elif [ $i -le 160 ]; then
+        parallelism="4,4,4,4"
+        batch=16
+    elif [ $i -le 170 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+    elif [ $i -le 180 ]; then
+        parallelism="8,8,8,8"
+        batch=0
+    elif [ $i -le 190 ]; then
+        parallelism="8,8,8,8"
+        batch=2
+    elif [ $i -le 200 ]; then
+        parallelism="8,8,8,8"
+        batch=4
+    elif [ $i -le 210 ]; then
+        parallelism="8,8,8,8"
+        batch=8
+    elif [ $i -le 220 ]; then
+        parallelism="8,8,8,8"
+        batch=16
+    elif [ $i -le 230 ]; then
+        parallelism="8,8,8,8"
+        batch=32
+    elif [ $i -le 240 ]; then
+        parallelism="16,16,16,16"
+        batch=0
+    elif [ $i -le 250 ]; then
+        parallelism="16,16,16,16"
+        batch=2
+    elif [ $i -le 260 ]; then
+        parallelism="16,16,16,16"
+        batch=4
+    elif [ $i -le 270 ]; then
+        parallelism="16,16,16,16"
+        batch=8
+    elif [ $i -le 280 ]; then
+        parallelism="16,16,16,16"
+        batch=16
+    elif [ $i -le 290 ]; then
+        parallelism="16,16,16,16"
         batch=32
 
     fi
@@ -94,13 +160,13 @@ run_tests() {
               throughput_values+="$throughput2;"
            fi
 
-           echo "Execution $i (--batch $batch --parallelism: $parallelism --cpu-pinning $cpu_pinning), Throughput: $throughput1" >> $output_file1
+           echo "Execution $i (--batch $batch --parallelism: $parallelism), Throughput: $throughput1" >> $output_file1
            echo "" >> $output_file1
         fi
 
         if [ $((i % 10)) -eq 0 ] ; then
               throughput_values=${throughput_values::-1}
-              echo "--batch $batch --parallelism: $parallelism --cpu-pinning $cpu_pinning;">> $output_file2
+              echo "--batch $batch --parallelism: $parallelism;">> $output_file2
               echo " Throughput: $throughput_values">> $output_file2
               echo "" >> $output_file1
               echo "" >> $output_file1
