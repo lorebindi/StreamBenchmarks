@@ -10,3 +10,5 @@ metric_latency.json
 # Ignora file oggetto e di compilazione
 *.o
 CMakeLists.txt
+
+complete.sh

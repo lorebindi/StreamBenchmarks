@@ -5,6 +5,7 @@
 bin/
 log/
 build/
+profiling_files/
 metric_latency.json
 
 # Ignora file oggetto e di compilazione
