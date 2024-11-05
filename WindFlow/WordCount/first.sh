@@ -2,7 +2,7 @@
 
 # Numero di esecuzioni
 n_runs=300
-current_run=181
+current_run=161
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -145,15 +145,17 @@ run_tests() {
         fi
 
         # Esegue il programma e cattura l'output desiderato
-        output=$(././bin/sd --rate 0 --keys 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput")
+        output=$(././bin/wc --rate 0 --sampling 1000 --batch $batch --parallelism $parallelism | grep "Measured throughput")
 
         echo "$output"
 
         if [ -z "$output" ]; then
             echo "Error: 'Measured throughput:' not found $i" >> $output_file1
         else
-           throughput1=$(echo $output | grep -o '[0-9.]\+ tuples/seconds')
+           throughput1=$(echo $output | grep -o '[0-9.]\+ MB/s')
            throughput2=$(echo $output | grep -o '[0-9.]\+' | tail -n 1)
+
+           throughput2=$(echo $throughput2 | sed 's/\./,/g')
 
            # Aggiunge il throughput se non vuoto
            if [ ! -z "$throughput2" ]; then
@@ -209,9 +211,5 @@ do
         echo "Tests has been interrupted."
     fi
 done
-
-cd ..
-cd ./WordCount
-./first.sh
 
 exit
