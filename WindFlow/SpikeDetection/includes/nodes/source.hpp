@@ -30,6 +30,7 @@
 #include<ff/mapping_utils.hpp>
 #include "../util/tuple.hpp"
 #include "../util/constants.hpp"
+#include<random>
 
 using namespace std;
 using namespace ff;
@@ -41,14 +42,15 @@ extern atomic<long> sent_tuples;
 class Source_Functor
 {
 private:
-    const vector<tuple_t>& dataset;
+    const vector<tuple_t> dataset;
     int rate;
     size_t next_tuple_idx;
     long generated_tuples;
     unsigned long app_start_time;
     unsigned long current_time;
     size_t batch_size;
-    vector<tuple_t> local_dataset;
+    //vector<tuple_t> local_dataset;
+
 
     // active_delay method
     void active_delay(unsigned long waste_time)
@@ -63,7 +65,7 @@ private:
 
 public:
     // Constructor
-    Source_Functor(const vector<tuple_t>& _datasets,
+    Source_Functor(const vector<tuple_t> _datasets,
                    const int _rate,
                    const unsigned long _app_start_time,
                    const size_t _batch_size):
@@ -79,9 +81,15 @@ public:
     void operator()(Source_Shipper<tuple_t> &shipper, RuntimeContext &context)
     {
         // Copy of the dataset only when the first tuple is generated
-        if (local_dataset.empty()) {
+        /*if (local_dataset.empty()) {
             local_dataset = std::vector<tuple_t>(dataset.begin(), dataset.end());
-        }
+        }*/
+
+        // used for change the keys
+        static const int max_keys = 10; // it defines the number of keys
+        auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count(); // uses the current time as a seed for the random number generator (high resolution clock)
+        std::mt19937 gen(seed); // creates a pseudo-random number generator using the seed.
+        std::uniform_int_distribution<> dis (0, max_keys - 1); // defines a uniform distribution that generates random numbers in [0, max_keys-1] (all the numbers in the interval have the same probability of being chosen).
 
         current_time = current_time_nsecs(); // get the current time
         //assert(dataset != nullptr);
@@ -89,7 +97,10 @@ public:
         while (current_time - app_start_time <= app_run_time) // generation loop
         {
 
-            tuple_t t(local_dataset.at(next_tuple_idx));
+            tuple_t t(dataset.at(next_tuple_idx));
+
+            t.key = dis(gen); // t.key takes a random number in [0, max_keys-1].
+
             if ((batch_size > 0) && (generated_tuples % batch_size == 0)) {
                 current_time = current_time_nsecs(); // get the new current time
             }
@@ -99,7 +110,7 @@ public:
             // t.ts = current_time;
             shipper.pushWithTimestamp(std::move(t), current_time); // send the next tuple
             generated_tuples++;
-            next_tuple_idx = (next_tuple_idx + 1) % local_dataset.size();
+            next_tuple_idx = (next_tuple_idx + 1) % dataset.size();
             if (rate != 0) { // active waiting to respect the generation rate
                 long delay_nsec = (long) ((1.0d / rate) * 1e9);
                 active_delay(delay_nsec);
