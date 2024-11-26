@@ -45,7 +45,8 @@ typedef enum { DATE_FIELD, TIME_FIELD, EPOCH_FIELD, DEVICE_ID_FIELD, TEMP_FIELD,
 typedef enum { TEMPERATURE, HUMIDITY, LIGHT, VOLTAGE } monitored_field;
 
 // model parameters
-size_t _moving_avg_win_size = 1000;
+size_t _moving_avg_win_size = 10000;
+inline int _max_keys = ;
 monitored_field _field = TEMPERATURE;
 double _threshold = 0.25; // <-- original value was 0.025
 const string _input_file = "../../Datasets/SD/sensors.dat";

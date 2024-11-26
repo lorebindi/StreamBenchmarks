@@ -86,10 +86,9 @@ public:
         }*/
 
         // used for change the keys
-        static const int max_keys = 10; // it defines the number of keys
-        auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count(); // uses the current time as a seed for the random number generator (high resolution clock)
+        auto seed = 16112024; // date as a seed
         std::mt19937 gen(seed); // creates a pseudo-random number generator using the seed.
-        std::uniform_int_distribution<> dis (0, max_keys - 1); // defines a uniform distribution that generates random numbers in [0, max_keys-1] (all the numbers in the interval have the same probability of being chosen).
+        std::uniform_int_distribution<> dis (0, _max_keys - 1); // defines a uniform distribution that generates random numbers in [0, max_keys-1] (all the numbers in the interval have the same probability of being chosen).
 
         current_time = current_time_nsecs(); // get the current time
         //assert(dataset != nullptr);
