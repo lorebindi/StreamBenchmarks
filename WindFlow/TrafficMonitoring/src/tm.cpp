@@ -57,6 +57,11 @@ unordered_map<size_t, uint64_t> key_occ;                // contains the number o
 Road_Grid_List road_grid_list;                          // contains data extracted from the city shapefile
 atomic<long> sent_tuples;                               // total number of tuples sent by all the sources
 
+
+double random_offset(double min, double max) {
+    return min + (rand() / (RAND_MAX / (max - min)));
+}
+
 /** 
  *  @brief Parse the input file.
  *  
@@ -100,6 +105,22 @@ void parse_dataset(const string& file_path) {
                     if (key_occ.find(get<TAXI_ID_FIELD>(r)) == key_occ.end()) {
                         key_occ.insert(make_pair(get<TAXI_ID_FIELD>(r), 0));
                     }
+
+                    // Add 5 fictitious record to the dataset
+                    for (int i = 0; i < 5; ++i) {
+                        beijing_record_t duplicate = std::make_tuple(
+                            std::get<0>(r),                       // ID
+                            std::get<1>(r),                       // NID
+                            std::get<2>(r),                       // Date
+                            std::get<3>(r) + random_offset(-0.001, 0.001),  // Latitudine con offset
+                            std::get<4>(r) + random_offset(-0.001, 0.001),  // Longitudine con offset
+                            std::get<5>(r) + random_offset(-0.5, 0.5),      // Velocità con offset
+                            std::get<6>(r)                        // Direzione
+                        );
+                        beijing_parsed_file.push_back(duplicate);
+                        all_records++;
+                    }
+
                 }
                 else
                     incomplete_records++;
@@ -136,6 +157,7 @@ void parse_dataset(const string& file_path) {
             }
 
             all_records++;
+
         }
         file.close();
         //if (_monitored_city == BEIJING) print_taxi_parsing_info(beijing_parsed_file, all_records, incomplete_records);

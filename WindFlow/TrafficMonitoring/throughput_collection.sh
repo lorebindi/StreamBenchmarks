@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=10
-current_run=1
+n_runs=170
+current_run=161
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -90,6 +90,15 @@ set_parameters() {
         parallelism="4,4,4,4"
         batch=32
         cpu_pinning="2,50,42,16,18,10,58,32,4,12,6,14,34,26,0,48"
+
+    elif [ $i -le 170 ]; then
+        parallelism="8,8,8,8"
+        batch=0
+        cpu_pinning="1,17,33,49,9,25,41,57,3,19,35,51,11,27,43,59,5,21,37,53,13,29,45,61,7,23,39,55,15,31,47,63"
+    elif [ $i -le 180 ]; then
+        parallelism="8,8,8,8"
+        batch=0
+        cpu_pinning="1,49,41,19,11,59,37,29,17,9,57,35,27,5,53,45,33,25,3,51,43,21,13,61,7,23,39,55,15,31,47,63"
 
     fi
 }

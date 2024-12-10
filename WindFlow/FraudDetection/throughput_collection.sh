@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=10
+n_runs=20
 current_run=1
 
 # File di log per raccogliere gli output
@@ -25,21 +25,21 @@ get_previous_power_of_10() {
 set_parameters() {
     local i=$1
     if [ $i -le 10 ]; then
-        parallelism="8,8,8"
+        parallelism="4,4,4"
         batch=0
-        cpu_pinning="1,9,3,11,5,13,7,15,17,25,19,27,21,29,23,31,33,57,35,43,37,43,39,47"
+        cpu_pinning="2,34,10,42,18,50,26,58,3,35,11,43"
     elif [ $i -le 20 ]; then
         parallelism="4,4,4"
         batch=0
-        cpu_pinning="3,11,1,9,19,27,17,25,35,43,33,57"
+        cpu_pinning="2,34,10,42,18,50,26,58,1,17,33,49"
     elif [ $i -le 30 ]; then
-        parallelism="4,4,4"
-        batch=0
-        cpu_pinning="3,51,43,17,19,11,59,33,35,27,1,49"
-    elif [ $i -le 40 ]; then
         parallelism="4,4,4"
         batch=32
         cpu_pinning="3,35,11,43,1,17,33,49,19,51,27,59"
+    elif [ $i -le 40 ]; then
+        parallelism="4,4,4"
+        batch=32
+        cpu_pinning="3,51,43,17,19,11,59,33,35,27,1,49"
     elif [ $i -le 50 ]; then
         parallelism="4,4,4"
         batch=32
