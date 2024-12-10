@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=30
-current_run=21
+n_runs=10
+current_run=1
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"
@@ -24,31 +24,51 @@ get_previous_power_of_10() {
 # Funzione per impostare i parametri in base al valore di `i`
 set_parameters() {
 
-  # COMMENTA IL KEY BY SU MAP
     if [ $i -le 10 ]; then
-        parallelism="2,2,2,2"
-        batch=0
-        cpu_pinning="2,10,18,26,34,42,50,58"
-    elif [ $i -le 20 ]; then
-        parallelism="2,2,2,2"
+        parallelism="4,4,4,4"
         batch=32
-        cpu_pinning="2,10,18,26,34,42,50,58"
+        cpu_pinning="3,19,35,51,11,27,43,59,1,17,33,49,9,25,41,57"
+    elif [ $i -le 20 ]; then
+        parallelism="4,4,4,4"
+        batch=0
+        cpu_pinning="1,9,3,11,17,25,19,27,33,41,35,43,49,57,51,59"
     elif [ $i -le 30 ]; then
         parallelism="4,4,4,4"
         batch=0
-        cpu_pinning="0,8,2,10,16,24,18,26,32,40,34,42,48,56,50,58"
+        cpu_pinning="3,11,35,43,1,9,33,41,17,25,49,57,19,27,51,59"
     elif [ $i -le 40 ]; then
         parallelism="4,4,4,4"
-        batch=32
-        cpu_pinning="0,8,2,10,16,24,18,26,32,40,34,42,48,56,50,58"
+        batch=0
+        cpu_pinning="3,11,35,43,1,9,33,41,19,27,51,59,17,25,49,57"
     elif [ $i -le 50 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+        cpu_pinning="2,18,34,50,10,26,42,58,0,16,32,48,8,24,40,56"
+    elif [ $i -le 60 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+        cpu_pinning="3,35,11,43,19,51,27,59,1,33,9,41,17,49,25,57"
+    elif [ $i -le 70 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+        cpu_pinning="3,51,43,17,19,11,59,33,35,27,1,49,9,25,41,57"
+    elif [ $i -le 80 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+        cpu_pinning="3,11,35,43,1,9,33,41,17,25,49,57,19,27,51,59"
+    elif [ $i -le 90 ]; then
+        parallelism="4,4,4,4"
+        batch=32
+        cpu_pinning="3,11,35,43,1,9,33,41,19,27,51,59,17,25,49,57"
+    elif [ $i -le 100 ]; then
         parallelism="8,8,8,8"
         batch=0
-        cpu_pinning="0,8,2,10,4,12,6,14,16,24,18,26,20,28,22,30,32,40,34,42,36,44,38,46,48,56,50,58,52,60,54,62"
-    elif [ $i -le 60 ]; then
+        cpu_pinning="1,33,9,41,3,35,11,43,17,49,25,57,19,51,27,59,5,37,13,45,7,39,15,47,21,53,29,61,23,55,31,63"
+    elif [ $i -le 110 ]; then
         parallelism="8,8,8,8"
         batch=32
-        cpu_pinning="0,8,2,10,4,12,6,14,16,24,18,26,20,28,22,30,32,40,34,42,36,44,38,46,48,56,50,58,52,60,54,62"
+        cpu_pinning="1,33,9,41,3,35,11,43,17,49,25,57,19,51,27,59,5,37,13,45,7,39,15,47,21,53,29,61,23,55,31,63"
+
 
     fi
 }

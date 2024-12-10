@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Numero di esecuzioni
-n_runs=300
-current_run=181
+n_runs=170
+current_run=161
 
 # File di log per raccogliere gli output
 output_file1="log/throughput_log.txt"

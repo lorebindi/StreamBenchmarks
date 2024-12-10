@@ -86,9 +86,10 @@ public:
         }*/
 
         // used for change the keys
-        auto seed = 16112024; // date as a seed
+        /*auto seed = 16112024; // date as a seed
         std::mt19937 gen(seed); // creates a pseudo-random number generator using the seed.
         std::uniform_int_distribution<> dis (0, _max_keys - 1); // defines a uniform distribution that generates random numbers in [0, max_keys-1] (all the numbers in the interval have the same probability of being chosen).
+        */
 
         current_time = current_time_nsecs(); // get the current time
         //assert(dataset != nullptr);
@@ -98,7 +99,7 @@ public:
 
             tuple_t t(dataset.at(next_tuple_idx));
 
-            t.key = dis(gen); // t.key takes a random number in [0, max_keys-1].
+            //t.key = dis(gen); // t.key takes a random number in [0, max_keys-1].
 
             if ((batch_size > 0) && (generated_tuples % batch_size == 0)) {
                 current_time = current_time_nsecs(); // get the new current time
